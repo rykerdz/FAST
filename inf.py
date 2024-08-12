@@ -125,6 +125,7 @@ def main(args):
     # Use prepare_test_data for image preprocessing
     data = prepare_test_data(image_path, cfg.data.test.short_size, cfg.data.test.read_type)
 
+    data['img_metas'] = [data['img_metas']]
     data['imgs'] = data['imgs'][None].cuda() if not args.cpu else data['imgs'][None]
     data.update(dict(cfg=cfg))
 
