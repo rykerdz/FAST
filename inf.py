@@ -6,17 +6,34 @@ from models.utils import fuse_module, rep_model_convert
 from utils import ResultFormat
 import os
 import argparse
+from torch.utils.data import Dataset, DataLoader
+from mmcv.parallel import collate
+from mmdet.datasets.pipelines import Compose
 
+class SingleImageDataset(Dataset):
+    def __init__(self, image_path, pipeline):
+        self.image_path = image_path
+        self.pipeline = Compose(pipeline)
+
+    def __len__(self):
+        return 1  # Single image
+
+    def __getitem__(self, index):
+        # Load the image and apply transformations
+        data = dict(img_info=dict(filename=self.image_path), img_prefix=None)
+        data = self.pipeline(data)
+        return data
 
 def infer(image_path, model, cfg):
     # Data loader for single image inference
-    data_loader = build_data_loader(cfg.data.test, [image_path])
-    test_loader = torch.utils.data.DataLoader(
-        data_loader,
-        batch_size=1,  # Single image inference
+    test_pipeline = cfg.data.test.pipeline
+    dataset = SingleImageDataset(image_path, test_pipeline)
+    data_loader = DataLoader(
+        dataset,
+        batch_size=1,
         shuffle=False,
-        num_workers=0,  # No need for multiple workers for single image
-        pin_memory=False
+        num_workers=0,
+        collate_fn=collate  # Use the default collate function from mmcv
     )
 
     rf = ResultFormat(cfg.data.test.type, cfg.test_cfg.result_path)
