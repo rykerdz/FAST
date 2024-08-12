@@ -28,9 +28,9 @@ model = dict(
         )
     )
 )
-repeat_times = 10
+repeat_times = 1
 data = dict(
-    batch_size=16,
+    batch_size=8,
     train=dict(
         type='FAST_IC15',
         split='train',
@@ -49,17 +49,17 @@ data = dict(
     )
 )
 train_cfg = dict(
-    lr=1e-3,
+    lr=2e-3,
     schedule='polylr',
-    epoch=600 // repeat_times,
+    epoch=30 // repeat_times,
     optimizer='Adam',
     pretrain='pretrained/fast_base_ic17mlt_640.pth',
     # https://github.com/czczup/FAST/releases/download/release/fast_base_ic17mlt_640.pth
-    save_interval=10 // repeat_times,
+    save_interval=5 // repeat_times,
 )
 test_cfg = dict(
-    min_score=0.88,
-    min_area=250,
+    min_score=0.85,
+    min_area=100,
     bbox_type='rect',
     result_path='outputs/submit_ic15.zip'
 )
