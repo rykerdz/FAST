@@ -4,48 +4,23 @@ import os
 import sys
 from mmcv import Config
 import mmcv
-from dataset import build_data_loader
 from models import build_model
 from models.utils import fuse_module, rep_model_convert
-from utils import ResultFormat, AverageMeter
+from utils import ResultFormat
 from mmcv.cnn import get_model_complexity_info
 import logging
 import warnings
+
+from PIL import Image
+from torchvision import transforms
+import numpy as np
+
+# Assuming these functions are defined elsewhere in your code
+from dataset.utils import scale_aligned_short
+
+from dataset.utils import get_img
+
 warnings.filterwarnings('ignore')
-import json
-
-def test(test_loader, model, cfg):
-
-    rf = ResultFormat(cfg.data.test.type, cfg.test_cfg.result_path)
-
-    results = dict()
-
-    for idx, data in enumerate(test_loader):
-        print('Testing %d/%d\r' % (idx, len(test_loader)), flush=True, end='')
-        logging.info('Testing %d/%d\r' % (idx, len(test_loader)))
-        # prepare input
-        if not args.cpu:
-            data['imgs'] = data['imgs'].cuda(non_blocking=True)
-        data.update(dict(cfg=cfg))
-        # forward
-        with torch.no_grad():
-            outputs = model(**data)
-
-        if cfg.report_speed:
-            report_speed(model, data, speed_meters, cfg.batch_size)
-            continue
-
-        # save result
-        image_names = data['img_metas']['filename']
-        for index, image_name in enumerate(image_names):
-            rf.write_result(image_name, outputs['results'][index])
-            results[image_name] = outputs['results'][index]
-
-    if not cfg.report_speed:
-        results = json.dumps(results)
-        with open('outputs/output.json', 'w', encoding='utf-8') as json_file:
-            json.dump(results, json_file, ensure_ascii=False)
-            print("write json file success!")
 
 
 def model_structure(model):
@@ -53,10 +28,10 @@ def model_structure(model):
     print('-' * 90)
     print('|' + ' ' * 11 + 'weight name' + ' ' * 10 + '|' \
           + ' ' * 15 + 'weight shape' + ' ' * 15 + '|' \
-          + ' ' * 3 + 'number' + ' ' * 3 + '|')
+          + ' ' * 3 + 'number' + ' ' * 3 + '|') 
     print('-' * 90)
     num_para = 0
-    type_size = 1  ##如果是浮点数就是4
+    type_size = 1 
 
     for index, (key, w_variable) in enumerate(model.named_parameters()):
         if len(key) <= 30:
@@ -79,42 +54,49 @@ def model_structure(model):
     print('-' * 90)
 
 
+def prepare_test_data(img_path, short_size, read_type):
+    filename = img_path.split('/')[-1][:-4]
+
+    img = get_img(img_path, read_type)
+    img_meta = dict(
+        org_img_size=np.array(img.shape[:2])
+    )
+
+    img = scale_aligned_short(img, short_size)
+    img_meta.update(dict(
+        img_size=np.array(img.shape[:2]),
+        filename=filename
+    ))
+
+    img = Image.fromarray(img)
+    img = img.convert('RGB')
+    img = transforms.ToTensor()(img)
+    img = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])(img)
+
+    data = dict(
+        imgs=img,
+        img_metas=img_meta
+    )
+
+    return data
+
+
 def main(args):
     cfg = Config.fromfile(args.config)
 
-    for d in [cfg, cfg.data.test]:
-        d.update(dict(
-            report_speed=args.report_speed,
-        ))
-    if args.min_score is not None:
-        cfg.test_cfg.min_score = args.min_score
-    if args.min_area is not None:
-        cfg.test_cfg.min_area = args.min_area
-
-    cfg.batch_size = args.batch_size
-
-    # data loader
-    data_loader = build_data_loader(cfg.data.test)
-    test_loader = torch.utils.data.DataLoader(
-        data_loader,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.worker,
-        pin_memory=False
-    )
-    # model
+    # Model
     model = build_model(cfg.model)
-    
+
     if not args.cpu:
         model = model.cuda()
-    
+
     if args.checkpoint is not None:
         if os.path.isfile(args.checkpoint):
             print("Loading model and optimizer from checkpoint '{}'".format(args.checkpoint))
             logging.info("Loading model and optimizer from checkpoint '{}'".format(args.checkpoint))
             sys.stdout.flush()
             checkpoint = torch.load(args.checkpoint)
-            
+
             if not args.ema:
                 state_dict = checkpoint['state_dict']
             else:
@@ -128,43 +110,43 @@ def main(args):
         else:
             print("No checkpoint found at '{}'".format(args.checkpoint))
             raise
-    
-    model = rep_model_convert(model)
 
-    # fuse conv and bn
+    model = rep_model_convert(model)
     model = fuse_module(model)
-    
+
     if args.print_model:
         model_structure(model)
-        
-    # flops, params = get_model_complexity_info(model, (3, 1280, 864))
-    # flops, params = get_model_complexity_info(model, (3, 1200, 800))
-    # flops, params = get_model_complexity_info(model, (3, 1344, 896))
-    # flops, params = get_model_complexity_info(model, (3, 960, 640))
-    # flops, params = get_model_complexity_info(model, (3, 768, 512))
-    # flops, params = get_model_complexity_info(model, (3, 672, 448))
-    # flops, params = get_model_complexity_info(model, (3, 480, 320))
-    # print(flops, params)
-    
+
     model.eval()
-    test(test_loader, model, cfg)
+
+    # Single image inference
+    image_path = args.image_path
+
+    # Use prepare_test_data for image preprocessing
+    data = prepare_test_data(image_path, cfg.data.test.short_size, cfg.data.test.read_type)
+
+    data['imgs'] = data['imgs'][None].cuda() if not args.cpu else data['imgs'][None]
+    data.update(dict(cfg=cfg))
+
+    with torch.no_grad():
+        outputs = model(**data)
+
+    rf = ResultFormat(cfg.data.test.type, cfg.test_cfg.result_path)
+    print(outputs['results'][0])
+    print(f"Inference results for {image_path} saved.")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Hyperparams')
     parser.add_argument('config', help='config file path')
     parser.add_argument('checkpoint', nargs='?', type=str, default=None)
-    parser.add_argument('--report-speed', action='store_true')
     parser.add_argument('--print-model', action='store_true')
-    parser.add_argument('--min-score', default=None, type=float)
-    parser.add_argument('--min-area', default=None, type=int)
-    parser.add_argument('--batch-size', default=1, type=int)
-    parser.add_argument('--worker', default=4, type=int)
     parser.add_argument('--ema', action='store_true')
     parser.add_argument('--cpu', action='store_true')
+    parser.add_argument('--image-path', type=str, help='Path to a single image for inference', required=True)
 
     args = parser.parse_args()
-    mmcv.mkdir_or_exist("./speed_test")
+    mmcv.mkdir_or_exist("./speed_test") 
     config_name = os.path.basename(args.config)
     logging.basicConfig(filename=f'./speed_test/{config_name}.txt', level=logging.INFO)
 
