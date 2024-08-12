@@ -77,7 +77,7 @@ def prepare_test_data(img_path, short_size, read_type):
         imgs=img,
         img_metas=img_meta
     )
-
+    print(data)
     return data
 
 
