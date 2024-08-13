@@ -11,7 +11,7 @@ model = dict(
     detection_head=dict(
         type='fast_head',
         config='config/fast/nas-configs/fast_base.config',
-        pooling_size=4,
+        pooling_size=5,
         dropout_ratio=0.1,
         loss_text=dict(
             type='DiceLoss',
@@ -37,7 +37,7 @@ data = dict(
         is_transform=True,
         img_size=736,
         short_size=736,
-        pooling_size=4,
+        pooling_size=5,
         read_type='cv2',
         repeat_times=repeat_times
     ),
