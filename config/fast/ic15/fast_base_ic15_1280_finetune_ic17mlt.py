@@ -11,7 +11,7 @@ model = dict(
     detection_head=dict(
         type='fast_head',
         config='config/fast/nas-configs/fast_base.config',
-        pooling_size=15,
+        pooling_size=6,
         dropout_ratio=0.1,
         loss_text=dict(
             type='DiceLoss',
@@ -28,16 +28,16 @@ model = dict(
         )
     )
 )
-repeat_times = 10
+repeat_times = 1
 data = dict(
-    batch_size=16,
+    batch_size=8,
     train=dict(
         type='FAST_IC15',
         split='train',
         is_transform=True,
         img_size=1024,
         short_size=1280,
-        pooling_size=15,
+        pooling_size=6,
         read_type='cv2',
         repeat_times=repeat_times
     ),
@@ -49,17 +49,17 @@ data = dict(
     )
 )
 train_cfg = dict(
-    lr=1e-3,
+    lr=2e-3,
     schedule='polylr',
-    epoch=600 // repeat_times,
+    epoch=30 // repeat_times,
     optimizer='Adam',
     pretrain='pretrained/fast_base_ic17mlt_640.pth',
     # https://github.com/czczup/FAST/releases/download/release/fast_base_ic17mlt_640.pth
-    save_interval=10 // repeat_times,
+    save_interval=8 // repeat_times,
 )
 test_cfg = dict(
     min_score=0.88,
-    min_area=600,
+    min_area=200,
     bbox_type='rect',
     result_path='outputs/submit_ic15.zip'
 )
