@@ -101,9 +101,12 @@ def inf(inf_data, img, model, cfg):
     img_with_bboxes = draw(img, outputs['results'][0]['bboxes'])
     
     # Display the image
+    plt.imshow(img_with_bboxes)
+    plt.axis('off') 
+    # plt.show()
+
+    # Option 2: Save and display
     plt.savefig('output_image.jpg')
-    from IPython.display import Image
-    Image('output_image.jpg')
     
 
 
