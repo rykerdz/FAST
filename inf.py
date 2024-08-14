@@ -59,6 +59,13 @@ def inf(inf_data, model, cfg):
         inf_data['imgs'] = inf_data['imgs'].unsqueeze(0).cuda(non_blocking=True)
     inf_data.update(dict(cfg=cfg))
 
+    
+    inf_data['img_metas'] = {
+        'org_img_size': [img_meta['org_img_size']],  # Wrap in a list
+        'img_size': [img_meta['img_size']],        # Wrap in a list
+        'filename': [img_meta['filename']]         # Wrap in a list (if it's not already)
+    }
+    
     print(inf_data)
     
     with torch.no_grad():
