@@ -153,7 +153,7 @@ if __name__ == '__main__':
     parser.add_argument('config', nargs='?', type=str, default=None)
     parser.add_argument('checkpoint', nargs='?', type=str, default=None)
     parser.add_argument('img_path', nargs='?', type=str, default=None)
-    parser.add_argument('--save_to', nargs='?', type=str, default='output.jpg')
+    parser.add_argument('--save-to', nargs='?', type=str, default='output.jpg')
     parser.add_argument('--min-score', default=None, type=float)
     parser.add_argument('--min-area', default=None, type=int)
     parser.add_argument('--ema', action='store_true')
