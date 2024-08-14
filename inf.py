@@ -37,6 +37,9 @@ def draw(img, boxes):
         mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
     
     # Ensure right side has the same shape as the left side after boolean indexing
+    # Convert 'mask' to the same data type as 'img' 
+    mask = mask.astype(img.dtype)
+    
     blended_img = (0.6 * mask + 0.4 * img).astype(np.uint8)
     img[mask != 0] = blended_img[mask != 0]  # Assign values where mask is not 0
 
