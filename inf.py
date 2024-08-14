@@ -40,8 +40,7 @@ def draw(img, boxes):
     
     mask = mask.astype(img.dtype)
     
-    blended_img = (0.6 * mask + 0.4 * img).astype(np.uint8)
-    img[mask != 0] = blended_img[mask != 0]  # Assign values where mask is not 0
+    img[mask!=0] = (0.6 * mask + 0.4 * img).astype(np.uint8)[mask!=0]
 
     
     for box in boxes:
