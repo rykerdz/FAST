@@ -52,6 +52,9 @@ def test(test_loader, model, cfg):
         if not args.cpu:
             data['imgs'] = data['imgs'].cuda(non_blocking=True)
         data.update(dict(cfg=cfg))
+
+        print(data)
+        
         # forward
         with torch.no_grad():
             outputs = model(**data)
