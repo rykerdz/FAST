@@ -16,6 +16,8 @@ import json
 from dataset.utils import get_img
 from dataset.utils import scale_aligned_short
 import numpy as np
+from PIL import Image
+import torchvision.transforms as transforms
 
 
 def prepare_inf_data(img_path, read_type="cv2", short_size=736):
