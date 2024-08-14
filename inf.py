@@ -61,10 +61,11 @@ def inf(inf_data, model, cfg):
 
     
     inf_data['img_metas'] = {
-        'org_img_size': [inf_data['img_metas']['org_img_size']],  # Wrap in a list
-        'img_size': [inf_data['img_metas']['img_size']],        # Wrap in a list
-        'filename': [inf_data['img_metas']['filename']]         # Wrap in a list (if it's not already)
+        'org_img_size': [inf_data['img_metas']['org_img_size'].tolist()],  # Convert to list of ints
+        'img_size': [inf_data['img_metas']['img_size'].tolist()],        # Convert to list of ints
+        'filename': [inf_data['img_metas']['filename']]                 # Wrap in a list (if it's not already)
     }
+
     
     print(inf_data)
     
