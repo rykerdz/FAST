@@ -145,7 +145,7 @@ def main(args):
     
     
     model.eval()
-    inf_data, img = prepare_inf_data(args.img_path)
+    inf_data, img = prepare_inf_data(args.img_path, cfg.data.test.read_type, cfg.data.test.short_size)
     
     inf(inf_data, img, model, cfg, args.save_to)
 
