@@ -94,6 +94,8 @@ def inf(inf_data, img, model, cfg, save_to):
     
     # save the image
     cv2.imwrite(save_to, img_with_bboxes)
+
+    pring(f"\n image saved to {save_to}")
     
 
 
