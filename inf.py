@@ -69,7 +69,7 @@ def prepare_inf_data(img_path, read_type="cv2", short_size=736):
     return data, img_to_draw
 
 
-def inf(inf_data, img, model, cfg):
+def inf(inf_data, img, model, cfg, save_to):
     
     print('Testing the image...', flush=True, end='') 
 
@@ -93,12 +93,13 @@ def inf(inf_data, img, model, cfg):
     img_with_bboxes = draw(img, outputs['results'][0]['bboxes'])
     
     # save the image
-    cv2.imwrite("output.jpg", img_with_bboxes)
+    cv2.imwrite(save_to, img_with_bboxes)
     
 
 
 
 def main(args):
+    
     cfg = Config.fromfile(args.config)
 
     if args.min_score is not None:
@@ -144,7 +145,7 @@ def main(args):
     model.eval()
     inf_data, img = prepare_inf_data(args.img_path)
     
-    inf(inf_data, img, model, cfg)
+    inf(inf_data, img, model, cfg, args.save_to)
 
 
 if __name__ == '__main__':
@@ -152,6 +153,7 @@ if __name__ == '__main__':
     parser.add_argument('config', nargs='?', type=str, default=None)
     parser.add_argument('checkpoint', nargs='?', type=str, default=None)
     parser.add_argument('img_path', nargs='?', type=str, default=None)
+    parser.add_argument('--save_to', nargs='?', type=str, default='output.jpg')
     parser.add_argument('--min-score', default=None, type=float)
     parser.add_argument('--min-area', default=None, type=int)
     parser.add_argument('--ema', action='store_true')
