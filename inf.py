@@ -24,6 +24,9 @@ import cv2
 
 
 def draw(img, boxes):
+
+    for i in range(len(boxes)):
+        boxes[i] = np.reshape(boxes[i], (-1, 2)).astype('int32')
     
     mask = np.zeros(img.shape, dtype=np.uint8)
     
