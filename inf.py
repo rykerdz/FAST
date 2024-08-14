@@ -39,7 +39,7 @@ def draw(img, boxes):
     #img = np.where(mask!=0, (0.6 * mask + 0.4 * img).astype(np.uint8), img)
     
     for box in boxes:
-            cv2.drawContours(img, [box], -1, (0, 255, 0), thickness[args.dataset])
+            cv2.drawContours(img, [box], -1, (0, 255, 0), 4)
     return img
     
 
