@@ -36,7 +36,10 @@ def draw(img, boxes):
         rand_b = random.randint(100, 255)
         mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
     
-    #img = np.where(mask!=0, (0.6 * mask + 0.4 * img).astype(np.uint8), img)
+    # Ensure right side has the same shape as the left side after boolean indexing
+    blended_img = (0.6 * mask + 0.4 * img).astype(np.uint8)
+    img[mask != 0] = blended_img[mask != 0]  # Assign values where mask is not 0
+
     
     for box in boxes:
             cv2.drawContours(img, [box], -1, (0, 255, 0), 4)
