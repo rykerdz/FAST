@@ -24,8 +24,6 @@ import cv2
 
 
 def draw(img, boxes):
-
-    img = img.cpu().numpy()  # Move to CPU if necessary, then convert to NumPy
     
     for i in range(len(boxes)):
         boxes[i] = np.reshape(boxes[i], (-1, 2)).astype('int32')
@@ -39,7 +37,6 @@ def draw(img, boxes):
         mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
     
     
-    mask = mask.astype(img.dtype)
     
     img[mask!=0] = (0.6 * mask + 0.4 * img).astype(np.uint8)[mask!=0]
 
@@ -73,8 +70,8 @@ def prepare_inf_data(img_path, read_type="cv2", short_size=736):
         imgs=img,
         img_metas=img_meta
     )
-
-    return data, img
+    img_to_draw = get_img(img_path)
+    return data, img_to_draw
 
 
 def inf(inf_data, img, model, cfg):
