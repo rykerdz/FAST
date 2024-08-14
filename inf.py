@@ -25,6 +25,8 @@ import cv2
 
 def draw(img, boxes):
 
+    img = img.cpu().numpy()  # Move to CPU if necessary, then convert to NumPy
+    
     for i in range(len(boxes)):
         boxes[i] = np.reshape(boxes[i], (-1, 2)).astype('int32')
     
@@ -36,7 +38,6 @@ def draw(img, boxes):
         rand_b = random.randint(100, 255)
         mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
     
-    img = img.cpu().numpy()  # Move to CPU if necessary, then convert to NumPy
     
     mask = mask.astype(img.dtype)
     
