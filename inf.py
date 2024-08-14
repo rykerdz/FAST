@@ -19,6 +19,8 @@ import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+import random
+import cv2
 
 
 def draw(img, boxes):
