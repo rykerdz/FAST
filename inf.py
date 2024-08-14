@@ -15,6 +15,7 @@ warnings.filterwarnings('ignore')
 import json
 from dataset.utils import get_img
 from dataset.utils import scale_aligned_short
+import numpy as np
 
 
 def prepare_inf_data(img_path, read_type="cv2", short_size=736):
