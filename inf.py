@@ -3,28 +3,24 @@ import argparse
 import os
 import sys
 from mmcv import Config
-import mmcv
-from dataset import build_data_loader
 from models import build_model
 from models.utils import fuse_module, rep_model_convert
-from utils import ResultFormat, AverageMeter
-from mmcv.cnn import get_model_complexity_info
+from utils import ResultFormat
 import logging
 import warnings
 warnings.filterwarnings('ignore')
-import json
 from dataset.utils import get_img
 from dataset.utils import scale_aligned_short
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
-import matplotlib.pyplot as plt
 import random
 import cv2
 
 
+# Draw function borrowed from visualize.py
 def draw(img, boxes):
-    
+
     for i in range(len(boxes)):
         boxes[i] = np.reshape(boxes[i], (-1, 2)).astype('int32')
     
@@ -37,16 +33,15 @@ def draw(img, boxes):
         mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
     
     
-    
     img[mask!=0] = (0.6 * mask + 0.4 * img).astype(np.uint8)[mask!=0]
 
     
     for box in boxes:
-            cv2.drawContours(img, [box], -1, (0, 255, 0), 4)
+        cv2.drawContours(img, [box], -1, (0, 255, 0), 4)
     return img
     
 
-
+# prepare_inf_data from FASTIC15
 def prepare_inf_data(img_path, read_type="cv2", short_size=736):
     filename = img_path.split('/')[-1]
 
@@ -75,14 +70,13 @@ def prepare_inf_data(img_path, read_type="cv2", short_size=736):
 
 
 def inf(inf_data, img, model, cfg):
-
-    rf = ResultFormat(cfg.data.test.type, "inference_output")
-    results = dict()
     
     print('Testing the image...', flush=True, end='') 
 
+    # add batch dim
+    inf_data['imgs'] = inf_data['imgs'].unsqueeze(0)
     if not args.cpu:
-        inf_data['imgs'] = inf_data['imgs'].unsqueeze(0).cuda(non_blocking=True)
+        inf_data['imgs'] = inf_data['imgs'].cuda(non_blocking=True)
     inf_data.update(dict(cfg=cfg))
 
     
@@ -93,14 +87,12 @@ def inf(inf_data, img, model, cfg):
     }
 
     
-    print(inf_data)
-    
     with torch.no_grad():
         outputs = model(**inf_data)
 
     img_with_bboxes = draw(img, outputs['results'][0]['bboxes'])
     
-    # Display the image
+    # save the image
     cv2.imwrite("output.jpg", img_with_bboxes)
     
 
@@ -151,6 +143,7 @@ def main(args):
     
     model.eval()
     inf_data, img = prepare_inf_data(args.img_path)
+    
     inf(inf_data, img, model, cfg)
 
 
