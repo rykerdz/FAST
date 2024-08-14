@@ -18,6 +18,25 @@ from dataset.utils import scale_aligned_short
 import numpy as np
 from PIL import Image
 import torchvision.transforms as transforms
+import matplotlib.pyplot as plt
+
+
+def draw(img, boxes):
+    
+    mask = np.zeros(img.shape, dtype=np.uint8)
+    
+    for box in boxes:
+        rand_r = random.randint(100, 255)
+        rand_g = random.randint(100, 255)
+        rand_b = random.randint(100, 255)
+        mask = cv2.fillPoly(mask, [box], color=(rand_r, rand_g, rand_b))
+    
+    img[mask!=0] = (0.6 * mask + 0.4 * img).astype(np.uint8)[mask!=0]
+    
+    for box in boxes:
+            cv2.drawContours(img, [box], -1, (0, 255, 0), thickness[args.dataset])
+    return img
+    
 
 
 def prepare_inf_data(img_path, read_type="cv2", short_size=736):
@@ -44,13 +63,12 @@ def prepare_inf_data(img_path, read_type="cv2", short_size=736):
         img_metas=img_meta
     )
 
-    return data
+    return data, img
 
 
-def inf(inf_data, model, cfg):
+def inf(inf_data, img, model, cfg):
 
     rf = ResultFormat(cfg.data.test.type, "inference_output")
-
     results = dict()
     
     print('Testing the image...', flush=True, end='') 
@@ -72,7 +90,13 @@ def inf(inf_data, model, cfg):
     with torch.no_grad():
         outputs = model(**inf_data)
 
-    print(outputs['results'][0])
+    img_with_bboxes = draw(img, outputs['results'][0]['bboxes'])
+    
+    # Display the image
+    plt.imshow(img_with_bboxes)
+    plt.axis('off')  # Turn off axis labels and ticks
+    plt.show()
+    
 
 
 
@@ -120,8 +144,8 @@ def main(args):
     
     
     model.eval()
-    inf_data = prepare_inf_data(args.img_path)
-    inf(inf_data, model, cfg)
+    inf_data, img = prepare_inf_data(args.img_path)
+    inf(inf_data, img, model, cfg)
 
 
 if __name__ == '__main__':
