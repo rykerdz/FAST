@@ -56,7 +56,7 @@ def inf(inf_data, model, cfg):
     print('Testing the image...', flush=True, end='') 
 
     if not args.cpu:
-        inf_data['imgs'] = inf_data['imgs'].cuda(non_blocking=True)
+        inf_data['imgs'] = inf_data['imgs'].unsqueeze(0).cuda(non_blocking=True)
     inf_data.update(dict(cfg=cfg))
 
     with torch.no_grad():
