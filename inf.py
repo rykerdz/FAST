@@ -17,15 +17,15 @@ from dataset.utils import get_img
 from dataset.utils import scale_aligned_short
 
 
-def prepare_inf_data(img_path):
+def prepare_inf_data(img_path, read_type="cv2", short_size=736):
     filename = img_path.split('/')[-1]
 
-    img = get_img(img_path, self.read_type)
+    img = get_img(img_path, read_type)
     img_meta = dict(
         org_img_size=np.array(img.shape[:2])
     )
 
-    img = scale_aligned_short(img, self.short_size)
+    img = scale_aligned_short(img, short_size)
     img_meta.update(dict(
         img_size=np.array(img.shape[:2]),
         filename=filename
